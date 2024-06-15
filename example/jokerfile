@@ -1,0 +1,54 @@
+env:
+  redis_port: 5555
+  data_dir: /Users/toudi/joker/services/
+  postgres:
+    bindir: /opt/homebrew/bin
+    username: django-app
+    password: test
+    dbname: example-db
+    port: 2222
+services:
+  go-svc:
+    dir: "{{ env.data_dir }}/go-app"
+    depends:
+      - django-app
+    bootstrap: go mod tidy
+    command:
+      - go build -o demo
+      - ./demo
+    cleanup: rm -f demo
+    hot-reload: true
+  redis:
+    dir: "{{ env.data_dir }}/redis"
+    command: redis-server --port {{ env.redis_port }}
+  django-app:
+    dir: "{{ env.data_dir }}/django-app"
+    depends:
+      - redis
+      - postgres
+    bootstrap:
+      env:
+        DJANGO_SUPERUSER_PASSWORD: test
+      commands:
+        - python3 -m venv .env
+        - mkdir envs
+        - '{{ env.postgres.bindir }}/psql -p {{ env.postgres.port }} postgres -c "CREATE ROLE \"{{ env.postgres.username }}\" WITH LOGIN PASSWORD ''{{ env.postgres.password }}''"'
+        - '{{ env.postgres.bindir }}/psql -p {{ env.postgres.port }} postgres -c "CREATE DATABASE \"{{ env.postgres.dbname }}\" WITH OWNER \"{{ env.postgres.username }}\""'
+        - echo "postgres://{{ env.postgres.username }}:{{ env.postgres.password }}@127.0.0.1:{{ env.postgres.port }}/{{ env.postgres.dbname }}" > envs/DATABASE_URL
+        - source .env/bin/activate
+        - pip install -r requirements.txt
+        - envdir envs python manage.py migrate
+        - envdir envs python manage.py createsuperuser --username test --noinput --email test@example.com
+    command:
+      - source .env/bin/activate
+      - envdir envs python manage.py migrate
+      - envdir envs python manage.py runserver
+    cleanup:
+      - rm -rf .env envs
+  postgres:
+    bootstrap:
+      - "{{ env.postgres.bindir }}/pg_ctl initdb -D {{ env.data_dir }}/postgres"
+      - sed -in 's/#port = 5432/port = {{ env.postgres.port }}/' {{ env.data_dir }}/postgres/postgresql.conf
+    command: "{{ env.postgres.bindir }}/postgres -D {{ env.data_dir }}/postgres"
+    cleanup:
+      - rm -rf {{ env.data_dir }}/postgres
