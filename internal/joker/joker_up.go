@@ -1,7 +1,6 @@
 package joker
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -9,12 +8,11 @@ import (
 	"time"
 )
 
-func (j *Joker) Up(ctx context.Context) error {
-	j.ctx = ctx
+func (j *Joker) Up() error {
 	j.StreamHandler()
 
 	for _, service := range j.services {
-		if err := service.Up(ctx, j); err != nil {
+		if err := service.Up(j.ctx, j); err != nil {
 			return err
 		}
 	}
@@ -26,7 +24,7 @@ func (j *Joker) Up(ctx context.Context) error {
 
 	<-signalChannel
 
-	ctx.Done()
+	j.ctx.Done()
 
 	fmt.Printf("Stopping processes\n")
 	return j.Down()

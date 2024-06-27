@@ -1,11 +1,10 @@
 package joker
 
 import (
-	"context"
 	"fmt"
 )
 
-func (j *Joker) Clear(ctx context.Context, serviceName string) error {
+func (j *Joker) Clear(serviceName string) error {
 	var err error
 
 	if err = j.Down(); err != nil {
@@ -18,7 +17,7 @@ func (j *Joker) Clear(ctx context.Context, serviceName string) error {
 			continue
 		}
 		fmt.Printf("calling %s::clear\n", service.definition.Name)
-		if err = service.Clear(ctx, j); err != nil {
+		if err = service.Clear(j); err != nil {
 			return err
 		}
 	}

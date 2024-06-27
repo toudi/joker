@@ -1,11 +1,10 @@
 package joker
 
 import (
-	"context"
 	"fmt"
 )
 
-func (s *Service) Clear(ctx context.Context, joker *Joker) error {
+func (s *Service) Clear(joker *Joker) error {
 	if s.definition.Cleanup != nil {
 		return joker.state.ClearBootstrapped(s.definition.Name, func() error {
 
@@ -13,7 +12,7 @@ func (s *Service) Clear(ctx context.Context, joker *Joker) error {
 				return err
 			}
 
-			command, err := joker.prepareCommand(ctx, s.definition.Cleanup)
+			command, err := joker.prepareCommand(joker.ctx, s.definition.Cleanup)
 			fmt.Printf("command: %v\n", command)
 			if s.definition.Dir != "" {
 				command.Dir = s.definition.Dir

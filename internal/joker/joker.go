@@ -19,10 +19,16 @@ type Joker struct {
 	ctx               context.Context
 }
 
-func Joker_init(config *jokerfile.Jokerfile) (*Joker, error) {
+func Joker_init(ctx context.Context, configfile string) (*Joker, error) {
+	config, err := jokerfile.Parse(configfile)
+	if err != nil {
+		return nil, err
+	}
+
 	jkr := &Joker{
 		config:     config,
 		streamChan: make(chan StreamLine),
+		ctx:        ctx,
 	}
 
 	for _, serviceDefinition := range config.Services {

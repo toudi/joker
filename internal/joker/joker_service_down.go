@@ -14,7 +14,7 @@ func (s *Service) Down() error {
 			return syscall.Kill(-s.process.Process.Pid, syscall.SIGKILL)
 		}
 		// this is a regular process
-		return s.process.Process.Kill()
+		return s.process.Process.Signal(syscall.SIGTERM)
 	} else {
 		fmt.Printf("[%s] does not need to be killed.\n", s.definition.Name)
 	}
