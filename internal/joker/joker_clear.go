@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (j *Joker) Clear(serviceName string) error {
+func (j *Joker) Clear(serviceName string, force bool) error {
 	var err error
 
 	if err = j.Down(); err != nil {
@@ -17,7 +17,7 @@ func (j *Joker) Clear(serviceName string) error {
 			continue
 		}
 		fmt.Printf("calling %s::clear\n", service.definition.Name)
-		if err = service.Clear(j); err != nil {
+		if err = service.Clear(j, force); err != nil {
 			return err
 		}
 	}

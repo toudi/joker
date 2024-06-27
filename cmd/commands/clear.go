@@ -39,7 +39,7 @@ var clear = Command{
 			serviceName = flagSet.Arg(0)
 		}
 
-		return jkr.Clear(serviceName)
+		return jkr.Clear(serviceName, clearFlags.force)
 	},
 }
 

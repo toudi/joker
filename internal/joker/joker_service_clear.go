@@ -4,9 +4,9 @@ import (
 	"fmt"
 )
 
-func (s *Service) Clear(joker *Joker) error {
+func (s *Service) Clear(joker *Joker, force bool) error {
 	if s.definition.Cleanup != nil {
-		return joker.state.ClearBootstrapped(s.definition.Name, func() error {
+		return joker.state.ClearBootstrapped(s.definition.Name, force, func() error {
 
 			if err := s.prepareDir(joker); err != nil {
 				return err

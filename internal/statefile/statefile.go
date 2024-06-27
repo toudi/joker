@@ -51,8 +51,12 @@ func (s *State) SetBootstrapped(service string, handler func() error) error {
 	return nil
 }
 
-func (s *State) ClearBootstrapped(service string, handler func() error) error {
-	if slices.Contains(s.Bootstrapped, service) {
+// ClearBootstrapped calls `handler` and removes `service` from bootstrapped array.
+// by default, the handler is called only when `service` is found in the array
+// (which indicates that a service was bootstrapped) however this behavior can be
+// overriden with the `force` flag
+func (s *State) ClearBootstrapped(service string, force bool, handler func() error) error {
+	if slices.Contains(s.Bootstrapped, service) || force {
 		var err error
 		if err = handler(); err == nil {
 			s.Bootstrapped = lo.Reject(
