@@ -1,12 +1,13 @@
 package joker
 
 import (
-	"fmt"
 	"syscall"
+
+	"github.com/phuslu/log"
 )
 
 func (s *Service) Down() error {
-	fmt.Printf("stopping %s\n", s.definition.Name)
+	log.Debug().Str("service", s.definition.Name).Msg("down")
 
 	if s.process != nil && s.IsAlive() {
 		// this is a shell subprocess
@@ -16,7 +17,7 @@ func (s *Service) Down() error {
 		// this is a regular process
 		return s.process.Process.Signal(syscall.SIGTERM)
 	} else {
-		fmt.Printf("[%s] does not need to be killed.\n", s.definition.Name)
+		log.Debug().Str("service", s.definition.Name).Msg("does not need to be killed")
 	}
 	return nil
 }

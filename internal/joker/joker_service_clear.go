@@ -1,19 +1,22 @@
 package joker
 
 import (
-	"fmt"
+	"github.com/phuslu/log"
 )
 
 func (s *Service) Clear(joker *Joker, force bool) error {
 	if s.definition.Cleanup != nil {
 		return joker.state.ClearBootstrapped(s.definition.Name, force, func() error {
+			log.Debug().Str("service", s.definition.Name).Msg("clear")
 
 			if err := s.prepareDir(joker); err != nil {
 				return err
 			}
 
 			command, err := joker.prepareCommand(joker.ctx, s.definition.Cleanup)
-			fmt.Printf("command: %v\n", command)
+
+			log.Debug().Str("command", command.String())
+
 			if s.definition.Dir != "" {
 				command.Dir = s.definition.Dir
 			}

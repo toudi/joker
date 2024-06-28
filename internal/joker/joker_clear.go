@@ -1,9 +1,5 @@
 package joker
 
-import (
-	"fmt"
-)
-
 func (j *Joker) Clear(serviceName string, force bool) error {
 	var err error
 
@@ -16,7 +12,6 @@ func (j *Joker) Clear(serviceName string, force bool) error {
 		if serviceName != "" && service.definition.Name != serviceName {
 			continue
 		}
-		fmt.Printf("calling %s::clear\n", service.definition.Name)
 		if err = service.Clear(j, force); err != nil {
 			return err
 		}

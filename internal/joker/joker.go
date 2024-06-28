@@ -2,9 +2,9 @@ package joker
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/flosch/pongo2/v6"
+	"github.com/phuslu/log"
 	"github.com/toudi/joker/internal/jokerfile"
 	"github.com/toudi/joker/internal/statefile"
 )
@@ -60,7 +60,7 @@ func (j *Joker) SaveState() error {
 func (j *Joker) interpolateEnvVars(value string) string {
 	pongoTmpl, err := pongo2.FromString(value)
 	if err != nil {
-		fmt.Printf("error preparing template: %v\n", err)
+		log.Error().Err(err).Msg("error preparing template")
 		return value
 	}
 

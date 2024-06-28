@@ -6,6 +6,7 @@ require (
 	github.com/flosch/pongo2/v6 v6.0.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
+	github.com/phuslu/log v1.0.106
 	github.com/samber/lo v1.39.0
 	gopkg.in/yaml.v3 v3.0.1
 )

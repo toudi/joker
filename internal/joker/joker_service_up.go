@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"fmt"
 	"os"
+
+	"github.com/phuslu/log"
 )
 
 func streamHandler(scanner *bufio.Scanner, service string, joker *Joker, stderr bool) {
@@ -34,7 +35,7 @@ func (s *Service) prepareDir(joker *Joker) error {
 }
 
 func (s *Service) Up(ctx context.Context, joker *Joker) error {
-	fmt.Printf("launching %s\n", s.definition.Name)
+	log.Debug().Str("service", s.definition.Name).Msg("launching")
 
 	if err := s.prepareDir(joker); err != nil {
 		return err

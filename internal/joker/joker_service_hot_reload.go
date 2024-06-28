@@ -2,12 +2,12 @@ package joker
 
 import (
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/phuslu/log"
 )
 
 var (
@@ -82,10 +82,10 @@ func (s *Service) executeHotReloadHandler(joker *Joker, directories []string) er
 				}
 				if event.Has(fsnotify.Write) {
 					if err := s.Down(); err != nil {
-						fmt.Printf("[ERROR] could not stop service: %v\n", err)
+						log.Error().Err(err).Msg("could not stop service")
 					}
 					if err = s.Up(joker.ctx, joker); err != nil {
-						fmt.Printf("[ERROR] could not start service: %v\n", err)
+						log.Error().Err(err).Msg("could not start service")
 					}
 				}
 			case _, ok := <-watcher.Errors:

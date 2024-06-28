@@ -1,11 +1,12 @@
 package joker
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/phuslu/log"
 )
 
 func (j *Joker) Up() error {
@@ -26,7 +27,8 @@ func (j *Joker) Up() error {
 
 	j.ctx.Done()
 
-	fmt.Printf("Stopping processes\n")
+	log.Debug().Msg("stopping processes")
+
 	return j.Down()
 }
 
@@ -46,31 +48,25 @@ func (j *Joker) livenessCheck(interrupt chan os.Signal) {
 			var serviceName = service.definition.Name
 			if _, exists := recheck[serviceName]; !exists {
 				recheck[serviceName] = true
-				// fmt.Printf("%s was not yet checked; set recheck=true\n", serviceName)
+				log.Debug().Str("service", serviceName).Msg("was not yet checked for liveness")
 				continue
 			}
 			if !recheck[serviceName] {
-				// fmt.Printf("%s was already checked and the test passed\n", serviceName)
+				log.Debug().Str("service", serviceName).Msg("was already checked")
 				checksLeft -= 1
 				continue
 			}
 			if !service.HasStarted() {
-				// fmt.Printf("%s did not start yet\n", serviceName)
+				log.Debug().Str("service", serviceName).Msg("did not start yet")
 				continue
 			}
 			if service.IsAlive() {
-				// fmt.Printf(
-				// 	"%s appears to be alive.\n",
-				// 	serviceName,
-				// )
+				log.Debug().Str("service", serviceName).Msg("appears to be alive")
 				recheck[serviceName] = false
 				checksLeft -= 1
 				continue
 			} else {
-				// fmt.Printf(
-				// 	"%s did not pass liveness check. stopping joker\n",
-				// 	service.definition.Name,
-				// )
+				log.Debug().Str("service", serviceName).Msg("did not pass liveness check. stopping joker")
 				defer func() {
 					interrupt <- syscall.SIGTERM
 				}()

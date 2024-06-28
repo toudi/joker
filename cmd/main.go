@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/phuslu/log"
 	"github.com/toudi/joker/cmd/commands"
 	"github.com/toudi/joker/internal/joker"
 )
@@ -38,20 +39,35 @@ func main() {
 
 	ctx := context.Background()
 
+	log.DefaultLogger = log.Logger{
+		TimeFormat: "15:04:05",
+		Level:      log.InfoLevel,
+		Caller:     1,
+		Writer: &log.ConsoleWriter{
+			ColorOutput:    true,
+			QuoteString:    true,
+			EndWithMessage: true,
+		},
+	}
+
+	if flags.verbose {
+		log.DefaultLogger.Level = log.DebugLevel
+	}
+
 	jkr, err := joker.Joker_init(ctx, flags.jokerfile)
 	if err != nil {
-		fmt.Printf("[error] unable to initialize joker: %v\n", err)
+		log.Error().Err(err).Msg("unable to initialize joker")
 		os.Exit(-1)
 	}
 
 	if err = jkr.SetStatefile(flags.statefile); err != nil {
-		fmt.Printf("[error] unable to set statefile: %v\n", err)
+		log.Error().Err(err).Msg("unable to set statefile")
 		os.Exit(-1)
 	}
 
 	jkr.Defer(func() {
 		if err := jkr.SaveState(); err != nil {
-			fmt.Printf("unable to persist statefile: %v\n", err)
+			log.Error().Err(err).Msg("unable to persist statefile")
 		}
 	})
 
