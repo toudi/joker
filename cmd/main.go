@@ -16,6 +16,7 @@ import (
 
 type Flags struct {
 	verbose   bool
+	trace     bool
 	jokerfile string
 	statefile string
 }
@@ -26,6 +27,7 @@ func main() {
 	var flags Flags
 
 	flag.BoolVar(&flags.verbose, "v", false, "verbose mode")
+	flag.BoolVar(&flags.trace, "vv", false, "very verbose mode (logging set to trace)")
 	flag.StringVar(&flags.jokerfile, "f", "jokerfile", "jokerfile location")
 	flag.StringVar(&flags.statefile, "s", ".jokerstate", "statefile location")
 
@@ -52,6 +54,8 @@ func main() {
 
 	if flags.verbose {
 		log.DefaultLogger.Level = log.DebugLevel
+	} else if flags.trace {
+		log.DefaultLogger.Level = log.TraceLevel
 	}
 
 	jkr, err := joker.Joker_init(ctx, flags.jokerfile)

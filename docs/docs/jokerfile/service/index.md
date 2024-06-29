@@ -122,6 +122,18 @@ services:
 Joker checks for the service liveness during the instantiation. This means that if any problem occurs during `joker up`, joker will stop all the running services and exit. I understand that this may cause a problem as maybe you'd want to define a service that is allowed to exit (and therefore opt-out from the liveness check). I'll try to implement it asap. for the time being, your best option is to add this to the `bootstrap` or `command` sections as a step.
 :::
 
+### Stopping service(s)
+
+By default, the service will be stopped with `SIGTERM` signal. If you find it unsuitable, you can override the signal like so:
+
+```yaml
+services:
+  my-service:
+    shutdown-signal: SIGQUIT
+```
+
+You can use either full name (e.g. `SIGQUIT`), an abbreviation (`QUIT`) or a number (`3`).
+
 ## Hot reloading
 
 ::: info
