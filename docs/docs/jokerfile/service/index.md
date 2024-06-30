@@ -119,7 +119,15 @@ services:
 ```
 
 ::: warning
-Joker checks for the service liveness during the instantiation. This means that if any problem occurs during `joker up`, joker will stop all the running services and exit. I understand that this may cause a problem as maybe you'd want to define a service that is allowed to exit (and therefore opt-out from the liveness check). I'll try to implement it asap. for the time being, your best option is to add this to the `bootstrap` or `command` sections as a step.
+Joker checks for the service liveness during the instantiation. This means that if any problem occurs during `joker up` (or even there won't be a problem but the command will simply finish), joker will stop all the running services and exit. If you **do** want to have a service that **does not** need to pass the liveness check, you have to set the `no-liveness-check` property as such:
+
+```yaml
+services:
+  some-setup-step:
+    command: echo {{ env.data_dir }}
+    no-liveness-check: true
+```
+
 :::
 
 ### Stopping service(s)

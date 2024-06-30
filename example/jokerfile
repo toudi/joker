@@ -8,6 +8,9 @@ env:
     dbname: example-db
     port: 2222
 services:
+  dummy:
+    command: echo {{ env.data_dir }}
+    no-liveness-check: true
   go-svc:
     dir: "{{ env.data_dir }}/go-app"
     depends:
