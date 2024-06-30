@@ -9,10 +9,6 @@ func (s *Service) Clear(joker *Joker, force bool) error {
 		return joker.state.ClearBootstrapped(s.definition.Name, force, func() error {
 			log.Debug().Str("service", s.definition.Name).Msg("clear")
 
-			if err := s.prepareDir(joker); err != nil {
-				return err
-			}
-
 			command, err := joker.prepareCommand(joker.ctx, s.definition.Cleanup)
 
 			log.Debug().Str("command", command.String())

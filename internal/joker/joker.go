@@ -16,7 +16,10 @@ type Joker struct {
 	env               pongo2.Context
 	streamChan        chan StreamLine
 	shutdownFunctions []func()
-	ctx               context.Context
+	// will only be launched if there's at least one service
+	// that requests hot reloading
+	hotReloadWatcher *HotReloadWatcher
+	ctx              context.Context
 }
 
 func Joker_init(ctx context.Context, configfile string) (*Joker, error) {
@@ -29,16 +32,28 @@ func Joker_init(ctx context.Context, configfile string) (*Joker, error) {
 		config:     config,
 		streamChan: make(chan StreamLine),
 		ctx:        ctx,
+		env:        make(pongo2.Context),
 	}
-
-	for _, serviceDefinition := range config.Services {
-		jkr.services = append(jkr.services, &Service{definition: serviceDefinition})
-	}
-
-	jkr.env = make(pongo2.Context)
 
 	if config.Environment != nil {
 		jkr.env.Update(pongo2.Context{"env": config.Environment})
+	}
+
+	for _, serviceDefinition := range config.Services {
+		service := &Service{definition: serviceDefinition}
+		if err = service.prepareDir(jkr); err != nil {
+			return nil, err
+		}
+		jkr.services = append(jkr.services, service)
+		if serviceDefinition.HotReload != nil {
+			if err = jkr.prepareHotReloading(service); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if err = jkr.startHotReloadWatcher(); err != nil {
+		return nil, err
 	}
 
 	return jkr, nil

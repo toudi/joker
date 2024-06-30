@@ -37,10 +37,6 @@ func (s *Service) prepareDir(joker *Joker) error {
 func (s *Service) Up(ctx context.Context, joker *Joker) error {
 	log.Debug().Str("service", s.definition.Name).Msg("launching")
 
-	if err := s.prepareDir(joker); err != nil {
-		return err
-	}
-
 	if err := s.bootstrap(ctx, joker); err != nil {
 		return err
 	}
@@ -65,13 +61,6 @@ func (s *Service) Up(ctx context.Context, joker *Joker) error {
 	go func() {
 		_ = s.process.Wait()
 	}()
-
-	// has the hot reload been asked for ?
-	if s.definition.HotReload != nil {
-		if err = s.HotReloadHandler(joker); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
