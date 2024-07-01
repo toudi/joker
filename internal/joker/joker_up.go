@@ -13,7 +13,8 @@ func (j *Joker) Up() error {
 
 	for _, service := range j.services {
 		if err := service.Up(j.ctx, j); err != nil {
-			return err
+			log.Error().Err(err).Msg("unable to instantiate project. stopping joker")
+			return j.Down()
 		}
 	}
 
