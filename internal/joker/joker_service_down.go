@@ -1,14 +1,18 @@
 package joker
 
 import (
-	"strings"
+	"errors"
 	"syscall"
+	"time"
 
 	"github.com/phuslu/log"
+	"github.com/toudi/joker/internal"
 	"golang.org/x/sys/unix"
 )
 
-func (s *Service) Down() error {
+var errTimeoutShuttingDownService = errors.New("timeout waiting for service to be shut down")
+
+func (s *Service) Down(options serviceShutdownOptions) error {
 	log.Debug().Str("service", s.definition.Name).Msg("down")
 
 	if s.process != nil && s.IsAlive() {
@@ -16,12 +20,47 @@ func (s *Service) Down() error {
 		if s.process.SysProcAttr != nil && s.process.SysProcAttr.Setpgid {
 			return syscall.Kill(-s.process.Process.Pid, syscall.SIGKILL)
 		}
+
 		// this is a regular process
-		return s.process.Process.Signal(s.getKillSignal())
+		if err := s.process.Process.Signal(options.signal); err != nil {
+			return err
+		}
+
+		if options.wait {
+			timerTimeout := time.NewTicker(5 * time.Second)
+			timerPoll := time.NewTicker(200 * time.Millisecond)
+
+			defer func() {
+				timerTimeout.Stop()
+				timerPoll.Stop()
+			}()
+
+			for {
+				select {
+				case <-timerPoll.C:
+					log.Trace().
+						Str("service", s.definition.Name).
+						Msg("waiting for process to finish")
+					if !s.IsAlive() {
+						return nil
+					}
+				case <-timerTimeout.C:
+					log.Error().Msg("timeout reached")
+					return errTimeoutShuttingDownService
+				}
+			}
+		}
 	} else {
 		log.Debug().Str("service", s.definition.Name).Msg("does not need to be killed")
 	}
 	return nil
+}
+
+func (s *Service) shutdownOptions(wait bool) serviceShutdownOptions {
+	return serviceShutdownOptions{
+		signal: s.getKillSignal(),
+		wait:   wait,
+	}
 }
 
 func (s *Service) getKillSignal() syscall.Signal {
@@ -33,22 +72,9 @@ func (s *Service) getKillSignal() syscall.Signal {
 	}
 
 	if signalName, ok := s.definition.KillSignal.(string); ok {
-		log.Trace().Str("signal", signalName).Msg("signal defined as a string")
-
-		if !strings.HasPrefix(signalName, "SIG") {
-			signalName = "SIG" + signalName
-		}
-
-		if parsedSignal := unix.SignalNum(signalName); parsedSignal > 0 {
-			signal = parsedSignal
-		}
+		signal = internal.ParseSignalFromString(signalName)
 	} else if signalNo, ok := s.definition.KillSignal.(int); ok {
-		log.Trace().Int("signal", signalNo).Msg("signal defined as int")
-
-		tmpSignal := syscall.Signal(signalNo)
-		if unix.SignalName(tmpSignal) != "" {
-			signal = tmpSignal
-		}
+		signal = internal.ParseSignalFromInt(signalNo)
 	}
 
 	log.Trace().Str("signal", unix.SignalName(signal)).Msg("returned")

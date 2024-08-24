@@ -48,6 +48,7 @@ func (s *Service) Up(ctx context.Context, joker *Joker) error {
 	if s.definition.Dir != "" {
 		command.Dir = s.definition.Dir
 	}
+
 	if err = handleCommandStream(joker, s.definition.Name, command); err != nil {
 		return err
 	}

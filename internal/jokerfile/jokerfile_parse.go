@@ -10,6 +10,7 @@ import (
 type parsableJokerfile struct {
 	Environment map[string]interface{} `yaml:"env"`
 	Services    map[string]Service     `yaml:"services"`
+	Commands    map[string]interface{} `yaml:"commands"`
 }
 
 func Parse(filePath string) (*Jokerfile, error) {
@@ -25,6 +26,7 @@ func Parse(filePath string) (*Jokerfile, error) {
 	}
 
 	jkrfile.Environment = srcJokerfile.Environment
+	jkrfile.Commands = srcJokerfile.Commands
 
 	for serviceName, service := range srcJokerfile.Services {
 		service.Name = serviceName

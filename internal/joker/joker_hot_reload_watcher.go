@@ -70,7 +70,7 @@ func (w *HotReloadWatcher) reloadAffectedServices(joker *Joker) {
 
 	for _, service := range reloadServices {
 		log.Trace().Str("service", service.definition.Name).Msg("reloading")
-		if err := service.Down(); err != nil {
+		if err := service.Down(service.shutdownOptions(true)); err != nil {
 			log.Error().Err(err).Msg("could not stop service")
 		}
 		if err := service.Up(joker.ctx, joker); err != nil {

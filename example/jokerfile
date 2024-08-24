@@ -55,3 +55,8 @@ services:
     command: "{{ env.postgres.bindir }}/postgres -D {{ env.data_dir }}/postgres"
     cleanup:
       - rm -rf {{ env.data_dir }}/postgres
+commands:
+  backup-db:
+    - "stop -signal=INT postgres"
+    - rsync -a {{ env.data_dir }}/postgres/ {{ env.data_dir }}/postgres-backup
+    - "start postgres"
