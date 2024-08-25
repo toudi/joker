@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	"github.com/samber/lo"
-	"github.com/toudi/joker/internal"
+	"github.com/toudi/joker/internal/utils"
 )
 
 const rpcCmdStopService = "stop"
@@ -31,11 +31,11 @@ func parseShutdownOptionsAndService(input string) (serviceShutdownOptions, strin
 		signalNo, err := strconv.Atoi(shutdownOptions.signalInput)
 		if err != nil {
 			// this is not an integer - let's revert to string parsing
-			shutdownOptions.signal = internal.ParseSignalFromString(
+			shutdownOptions.signal = utils.ParseSignalFromString(
 				shutdownOptions.signalInput,
 			)
 		} else {
-			shutdownOptions.signal = internal.ParseSignalFromInt(signalNo)
+			shutdownOptions.signal = utils.ParseSignalFromInt(signalNo)
 		}
 	}
 

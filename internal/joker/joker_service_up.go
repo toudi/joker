@@ -21,7 +21,7 @@ func streamHandler(scanner *bufio.Scanner, service string, joker *Joker, stderr 
 
 func (s *Service) prepareDir(joker *Joker) error {
 	if s.definition.Dir != "" {
-		s.definition.Dir = joker.interpolateEnvVars(s.definition.Dir)
+		s.definition.Dir = joker.interpolateEnvVars(s.definition.Dir, nil)
 		// check if the directory exists
 		_, err := os.Stat(s.definition.Dir)
 		if os.IsNotExist(err) {
@@ -41,7 +41,7 @@ func (s *Service) Up(ctx context.Context, joker *Joker) error {
 		return err
 	}
 
-	command, err := joker.prepareCommand(ctx, s.definition.Command)
+	command, err := joker.prepareCommand(ctx, s.definition.Command, s.templateContext())
 	if err != nil {
 		return err
 	}

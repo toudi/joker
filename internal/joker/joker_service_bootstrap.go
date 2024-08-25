@@ -16,7 +16,7 @@ func (s *Service) bootstrap(ctx context.Context, joker *Joker) error {
 		if err := joker.state.SetBootstrapped(s.definition.Name, func() error {
 			log.Info().Str("service", s.definition.Name).Msg("bootstrap")
 
-			command, err := joker.prepareCommand(ctx, s.definition.Bootstrap)
+			command, err := joker.prepareCommand(ctx, s.definition.Bootstrap, s.templateContext())
 
 			if err != nil {
 				return err

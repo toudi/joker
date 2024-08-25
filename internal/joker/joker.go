@@ -2,6 +2,7 @@ package joker
 
 import (
 	"context"
+	"strings"
 
 	"github.com/flosch/pongo2/v6"
 	"github.com/phuslu/log"
@@ -39,6 +40,8 @@ func Joker_init(ctx context.Context, configfile string) (*Joker, error) {
 		jkr.env.Update(pongo2.Context{"env": config.Environment})
 	}
 
+	var servicesEnv = map[string]interface{}{}
+
 	for _, serviceDefinition := range config.Services {
 		service := &Service{definition: serviceDefinition}
 		if err = service.prepareDir(jkr); err != nil {
@@ -50,7 +53,12 @@ func Joker_init(ctx context.Context, configfile string) (*Joker, error) {
 				return nil, err
 			}
 		}
+		servicesEnv[strings.ReplaceAll(serviceDefinition.Name, "-", "_")] = map[string]interface{}{
+			"data_dir": service.definition.Dir,
+		}
 	}
+
+	jkr.env.Update(pongo2.Context(map[string]interface{}{"services": servicesEnv}))
 
 	if err = jkr.startHotReloadWatcher(); err != nil {
 		return nil, err
@@ -72,13 +80,21 @@ func (j *Joker) SaveState() error {
 	return j.state.Save()
 }
 
-func (j *Joker) interpolateEnvVars(value string) string {
+func (j *Joker) interpolateEnvVars(value string, additionalEnv *pongo2.Context) string {
 	pongoTmpl, err := pongo2.FromString(value)
 	if err != nil {
 		log.Error().Err(err).Msg("error preparing template")
 		return value
 	}
 
-	value, _ = pongoTmpl.Execute(j.env)
+	var context = j.env
+	if additionalEnv != nil {
+		context.Update(*additionalEnv)
+	}
+
+	value, err = pongoTmpl.Execute(context)
+	if err != nil {
+		log.Error().Err(err).Msg("error interpolating string")
+	}
 	return value
 }

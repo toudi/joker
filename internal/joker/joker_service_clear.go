@@ -9,7 +9,11 @@ func (s *Service) Clear(joker *Joker, force bool) error {
 		return joker.state.ClearBootstrapped(s.definition.Name, force, func() error {
 			log.Debug().Str("service", s.definition.Name).Msg("clear")
 
-			command, err := joker.prepareCommand(joker.ctx, s.definition.Cleanup)
+			command, err := joker.prepareCommand(
+				joker.ctx,
+				s.definition.Cleanup,
+				s.templateContext(),
+			)
 
 			log.Debug().Str("command", command.String())
 

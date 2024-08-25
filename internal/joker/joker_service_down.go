@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/phuslu/log"
-	"github.com/toudi/joker/internal"
+	"github.com/toudi/joker/internal/utils"
 	"golang.org/x/sys/unix"
 )
 
@@ -72,9 +72,9 @@ func (s *Service) getKillSignal() syscall.Signal {
 	}
 
 	if signalName, ok := s.definition.KillSignal.(string); ok {
-		signal = internal.ParseSignalFromString(signalName)
+		signal = utils.ParseSignalFromString(signalName)
 	} else if signalNo, ok := s.definition.KillSignal.(int); ok {
-		signal = internal.ParseSignalFromInt(signalNo)
+		signal = utils.ParseSignalFromInt(signalNo)
 	}
 
 	log.Trace().Str("signal", unix.SignalName(signal)).Msg("returned")

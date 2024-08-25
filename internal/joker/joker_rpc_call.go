@@ -62,8 +62,9 @@ func rpcCmdCallHandler(j *Joker, command string) error {
 			// it's not a known RPC therefore the only thing left is to
 			// try to interpret it as a command.
 
-			interpolated := j.interpolateEnvVars(instructionString)
-			process, err := j.prepareCommand(j.ctx, interpolated)
+			interpolated := j.interpolateEnvVars(instructionString, nil)
+			log.Debug().Msgf("command after interpolation: %s\n", interpolated)
+			process, err := j.prepareCommand(j.ctx, interpolated, nil)
 			if err != nil {
 				return err
 			}

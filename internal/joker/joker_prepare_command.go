@@ -7,12 +7,17 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/flosch/pongo2/v6"
 	"github.com/samber/lo"
 )
 
 // this function takes the input, which can be either a list of strings or
 // a string and prepares command that can be executed
-func (j *Joker) prepareCommand(ctx context.Context, definition interface{}) (*exec.Cmd, error) {
+func (j *Joker) prepareCommand(
+	ctx context.Context,
+	definition interface{},
+	additionalContext *pongo2.Context,
+) (*exec.Cmd, error) {
 	// first, let's determine if the command is a single string or a list of
 	// strings
 	var commands []string
@@ -20,10 +25,10 @@ func (j *Joker) prepareCommand(ctx context.Context, definition interface{}) (*ex
 
 	if sstring, ok := definition.(string); ok {
 		// it is a single string
-		commands = []string{j.interpolateEnvVars(sstring)}
+		commands = []string{j.interpolateEnvVars(sstring, additionalContext)}
 	} else if mstrings, ok := definition.([]interface{}); ok {
 		commands = lo.Map(mstrings, func(sstring interface{}, index int) string {
-			return j.interpolateEnvVars(sstring.(string))
+			return j.interpolateEnvVars(sstring.(string), additionalContext)
 		})
 	} else if amap, ok := definition.(map[string]interface{}); ok {
 		// it is a map! let's check if there are known keys we're expecting
@@ -33,7 +38,7 @@ func (j *Joker) prepareCommand(ctx context.Context, definition interface{}) (*ex
 				envValueString := fmt.Sprintf("%s", envValue)
 				// now let's treat the envValueString as a base for our template
 				// and pass it trough the template rendering function.
-				envValueString = j.interpolateEnvVars(envValueString)
+				envValueString = j.interpolateEnvVars(envValueString, additionalContext)
 				// finally, append it to env variables of the command
 				env = append(env, fmt.Sprintf("%s=%s", strings.ToUpper(envName), envValueString))
 			}
@@ -41,7 +46,7 @@ func (j *Joker) prepareCommand(ctx context.Context, definition interface{}) (*ex
 		if commandsInterface, exists := amap["commands"]; exists {
 			if commandsSlice, ok := commandsInterface.([]interface{}); ok {
 				commands = lo.Map(commandsSlice, func(cstring interface{}, _ int) string {
-					return j.interpolateEnvVars(cstring.(string))
+					return j.interpolateEnvVars(cstring.(string), additionalContext)
 				})
 			}
 		} else {
