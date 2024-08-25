@@ -33,7 +33,7 @@ func Run(name string, jkr *joker.Joker, args []string) {
 	}
 
 	if err := AvailableCommands[cmdIdx].Run(jkr, args); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
 		os.Exit(1)
 	}
 }

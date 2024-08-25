@@ -3,6 +3,8 @@ package joker
 import (
 	"errors"
 	"strings"
+
+	"github.com/phuslu/log"
 )
 
 var (
@@ -32,6 +34,8 @@ func rpcCmdCallHandler(j *Joker, command string) error {
 		return errNoInstructions
 	}
 
+	log.Debug().Str("command", command).Msg("executing")
+
 	// even better. there are instructions. Let's proceed
 	for _, instruction := range tmpSlice {
 		instructionString, ok := instruction.(string)
@@ -40,6 +44,8 @@ func rpcCmdCallHandler(j *Joker, command string) error {
 			// stuff like conditional execution
 			return errInvalidInstruction
 		}
+
+		log.Debug().Msgf("command: %s", instructionString)
 
 		var isRpc bool = false
 
@@ -71,4 +77,8 @@ func rpcCmdCallHandler(j *Joker, command string) error {
 	}
 
 	return nil
+}
+
+func (j *Joker) CallCommand(commandName string) error {
+	return rpcCmdCallHandler(j, commandName)
 }

@@ -60,3 +60,5 @@ commands:
     - "stop -signal=INT postgres"
     - rsync -a {{ env.data_dir }}/postgres/ {{ env.data_dir }}/postgres-backup
     - "start postgres"
+  restore-db:
+    - rsync -a {{ env.data_dir }}/postgres-backup/ {{ env.data_dir }}/postgres
