@@ -29,17 +29,16 @@ func Parse(filePath string) (*Jokerfile, error) {
 	jkrfile.Environment = srcJokerfile.Environment
 	jkrfile.Commands = srcJokerfile.Commands
 
-	var defaultDataDir string = ""
 	if dataDir, exists := jkrfile.Environment["data_dir"]; exists {
 		if dataDirString, ok := dataDir.(string); ok {
-			defaultDataDir = dataDirString
+			jkrfile.DataDir = dataDirString
 		}
 	}
 
 	for serviceName, service := range srcJokerfile.Services {
 		service.Name = serviceName
-		if service.Dir == "" && defaultDataDir != "" {
-			service.Dir = filepath.Join(defaultDataDir, serviceName)
+		if service.Dir == "" && jkrfile.DataDir != "" {
+			service.Dir = filepath.Join(jkrfile.DataDir, serviceName)
 		}
 		jkrfile.Services = append(jkrfile.Services, service)
 	}

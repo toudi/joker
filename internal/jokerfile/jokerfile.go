@@ -15,6 +15,7 @@ type Service struct {
 }
 
 type Jokerfile struct {
+	DataDir     string
 	Services    []Service
 	Commands    map[string]interface{} `yaml:"commands"`
 	Environment map[string]interface{} `yaml:"env"`

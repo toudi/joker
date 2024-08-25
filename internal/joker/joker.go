@@ -2,6 +2,7 @@ package joker
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/flosch/pongo2/v6"
@@ -22,6 +23,8 @@ type Joker struct {
 	hotReloadWatcher *HotReloadWatcher
 	ctx              context.Context
 }
+
+var errDataDirNotSpecified = errors.New("data_dir not set in jokerfile")
 
 func Joker_init(ctx context.Context, configfile string) (*Joker, error) {
 	config, err := jokerfile.Parse(configfile)
@@ -78,6 +81,13 @@ func (j *Joker) SetStatefile(path string) error {
 
 func (j *Joker) SaveState() error {
 	return j.state.Save()
+}
+
+func (j *Joker) GetDataDir() (string, error) {
+	if j.config.DataDir != "" {
+		return j.config.DataDir, nil
+	}
+	return "", errDataDirNotSpecified
 }
 
 func (j *Joker) interpolateEnvVars(value string, additionalEnv *pongo2.Context) string {
