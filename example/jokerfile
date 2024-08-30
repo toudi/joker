@@ -55,8 +55,12 @@ services:
       - rm -rf {{ service.data_dir }}
 commands:
   backup-db:
-    - "stop -signal=INT postgres"
+    - "stop -with-deps postgres"
     - rsync -a {{ env.data_dir }}/postgres/ {{ env.data_dir }}/postgres-backup
-    - "start postgres"
+    - "start -with-deps postgres"
+    # you can call other commands as well
+    - call hello-world
   restore-db:
     - rsync -a {{ env.data_dir }}/postgres-backup/ {{ services.postgres.data_dir }}
+  hello-world:
+    - echo 'Hello, world'

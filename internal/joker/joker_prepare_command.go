@@ -59,14 +59,12 @@ func (j *Joker) prepareCommand(
 	var commandName string
 	var commandArgs []string
 
+	var cmd *exec.Cmd
+
 	if len(commands) > 1 {
 		// this is a series of commands therefore we have to execute it in shell
 		command := strings.Join(commands, " && ")
-		cmd := exec.CommandContext(ctx, "/bin/sh", "-c", command)
-		cmd.Env = env
-		// set the group so that we can kill the subprocesses
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-		return cmd, nil
+		cmd = exec.CommandContext(ctx, "/bin/sh", "-c", command)
 	} else if len(commands) == 1 {
 		// this is a single command therefore let's execute it directly
 		commandParts := strings.SplitN(commands[0], " ", 2)
@@ -75,10 +73,16 @@ func (j *Joker) prepareCommand(
 			if len(commandParts) > 1 {
 				commandArgs = strings.Split(commandParts[1], " ")
 			}
-			cmd := exec.CommandContext(ctx, commandName, commandArgs...)
-			cmd.Env = env
-			return cmd, nil
+			cmd = exec.CommandContext(ctx, commandName, commandArgs...)
 		}
 	}
-	return nil, fmt.Errorf("bad input command")
+
+	if cmd == nil {
+		return nil, fmt.Errorf("bad input command")
+	}
+
+	cmd.Env = env
+	// set the group so that we can send signals to subprocesses by ourselves
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	return cmd, nil
 }

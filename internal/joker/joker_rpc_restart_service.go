@@ -1,9 +1,5 @@
 package joker
 
-import (
-	"github.com/samber/lo"
-)
-
 const rpcCmdRestartService = "restart"
 
 func rpcCmdRestartServiceHandler(j *Joker, args string) error {
@@ -12,14 +8,9 @@ func rpcCmdRestartServiceHandler(j *Joker, args string) error {
 		return err
 	}
 
-	service, found := lo.Find(
-		j.services,
-		func(s *Service) bool { return s.definition.Name == serviceName },
-	)
-
-	if !found {
-		return errUnknownService
+	if err := j.StopService(serviceName, shutdownOptions); err != nil {
+		return err
 	}
 
-	return service.Restart(j, shutdownOptions)
+	return j.StartService(serviceName, shutdownOptions.withDependencies)
 }

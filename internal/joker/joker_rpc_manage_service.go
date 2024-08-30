@@ -6,7 +6,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/samber/lo"
 	"github.com/toudi/joker/internal/utils"
 )
 
@@ -20,7 +19,12 @@ func parseShutdownOptionsAndService(input string) (serviceShutdownOptions, strin
 	}
 
 	parser := flag.NewFlagSet("", flag.ContinueOnError)
-	parser.BoolVar(&shutdownOptions.withDependencies, "deps", false, "")
+	parser.BoolVar(
+		&shutdownOptions.withDependencies,
+		"with-deps",
+		false,
+		"process service dependencies",
+	)
 	parser.StringVar(&shutdownOptions.signalInput, "signal", "", "")
 
 	if err := parser.Parse(strings.Split(input, " ")); err != nil {
@@ -50,27 +54,28 @@ func rpcCmdStopServiceHandler(j *Joker, args string) error {
 		return err
 	}
 
-	service, found := lo.Find(
-		j.services,
-		func(s *Service) bool { return s.definition.Name == serviceName },
-	)
-
-	if !found {
-		return errUnknownService
-	}
-
-	return service.Down(shutdownOptions)
+	return j.StopService(serviceName, shutdownOptions)
 }
 
-func rpcCmdStartServiceHandler(j *Joker, serviceName string) error {
-	service, found := lo.Find(
-		j.services,
-		func(s *Service) bool { return s.definition.Name == serviceName },
+type serviceStartOptions struct {
+	WithDependencies bool
+}
+
+func rpcCmdStartServiceHandler(j *Joker, args string) error {
+	var startOptions serviceStartOptions
+	parser := flag.NewFlagSet("", flag.ContinueOnError)
+	parser.BoolVar(
+		&startOptions.WithDependencies,
+		"with-deps",
+		false,
+		"process service dependencies",
 	)
 
-	if !found {
-		return errUnknownService
+	if err := parser.Parse(strings.Split(args, " ")); err != nil {
+		return err
 	}
 
-	return service.Up(j.ctx, j)
+	serviceName := parser.Arg(0)
+
+	return j.StartService(serviceName, startOptions.WithDependencies)
 }

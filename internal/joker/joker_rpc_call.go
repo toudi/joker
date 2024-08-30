@@ -63,7 +63,7 @@ func rpcCmdCallHandler(j *Joker, command string) error {
 			// try to interpret it as a command.
 
 			interpolated := j.interpolateEnvVars(instructionString, nil)
-			log.Debug().Msgf("command after interpolation: %s\n", interpolated)
+			log.Trace().Msgf("command after interpolation: %s\n", interpolated)
 			process, err := j.prepareCommand(j.ctx, interpolated, nil)
 			if err != nil {
 				return err

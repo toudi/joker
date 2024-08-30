@@ -16,13 +16,7 @@ func (s *Service) Down(options serviceShutdownOptions) error {
 	log.Debug().Str("service", s.definition.Name).Msg("down")
 
 	if s.process != nil && s.IsAlive() {
-		// this is a shell subprocess
-		if s.process.SysProcAttr != nil && s.process.SysProcAttr.Setpgid {
-			return syscall.Kill(-s.process.Process.Pid, syscall.SIGKILL)
-		}
-
-		// this is a regular process
-		if err := s.process.Process.Signal(options.signal); err != nil {
+		if err := syscall.Kill(-s.process.Process.Pid, options.signal); err != nil {
 			return err
 		}
 

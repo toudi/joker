@@ -23,8 +23,12 @@ func (j *Joker) Up() error {
 	j.StreamHandler()
 
 	// the key point is to listen for these signals *before* any of the
-	// processes are spawned up. Otherwise the signals will be passed
-	// directly to the processes and we won't have control over that.
+	// processes are spawned up.
+	// Second piece of the puzzle is to set the gid attribute of the process:
+	// https://stackoverflow.com/questions/35433741/in-golang-prevent-child-processes-to-receive-signals-from-calling-process
+	// Otherwise the processes will be direct children of joker process and as a
+	// result all of the signals that joker receives will be propagated to the
+	// subprocesses as well, which is not what we want.
 	go func() {
 		<-signalChannel
 		signal.Stop(signalChannel)

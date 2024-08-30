@@ -1,13 +1,13 @@
 package joker
 
-import "os"
+import "syscall"
 
 type serviceShutdownOptions struct {
 	wait bool
 	// should joker wait for command to complete
 	signalInput string
 	// this one wil be passed by the user
-	signal os.Signal
+	signal syscall.Signal
 	// this one will be passed to the service after parsing from the string one
 	// defaults to SIGTERM
 	withDependencies bool
