@@ -47,6 +47,10 @@ func (j *Joker) Up() error {
 			log.Error().Err(err).Msg("unable to instantiate project. stopping joker")
 			return j.Down()
 		}
+		// this will no-op if the state doesn't need to be saved but it does
+		// introduce the benefit that if a service was successfully bootstrapped
+		// then the state will reflect that ASAP.
+		_ = j.state.Save()
 	}
 
 	// only start these once we know the project is up
