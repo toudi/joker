@@ -73,7 +73,7 @@ func (w *HotReloadWatcher) reloadAffectedServices(joker *Joker) {
 		if err := service.Down(service.shutdownOptions(true)); err != nil {
 			log.Error().Err(err).Msg("could not stop service")
 		}
-		if err := service.Up(joker.ctx, joker); err != nil {
+		if err := service.Up(joker.ctx, joker, serviceStartOptions{}); err != nil {
 			log.Error().Err(err).Msg("could not start service")
 		}
 	}

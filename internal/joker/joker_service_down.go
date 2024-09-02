@@ -1,7 +1,6 @@
 package joker
 
 import (
-	"errors"
 	"syscall"
 	"time"
 
@@ -9,8 +8,6 @@ import (
 	"github.com/toudi/joker/internal/utils"
 	"golang.org/x/sys/unix"
 )
-
-var errTimeoutShuttingDownService = errors.New("timeout waiting for service to be shut down")
 
 func (s *Service) Down(options serviceShutdownOptions) error {
 	log.Debug().Str("service", s.definition.Name).Msg("down")
@@ -21,28 +18,7 @@ func (s *Service) Down(options serviceShutdownOptions) error {
 		}
 
 		if options.wait {
-			timerTimeout := time.NewTicker(5 * time.Second)
-			timerPoll := time.NewTicker(200 * time.Millisecond)
-
-			defer func() {
-				timerTimeout.Stop()
-				timerPoll.Stop()
-			}()
-
-			for {
-				select {
-				case <-timerPoll.C:
-					log.Trace().
-						Str("service", s.definition.Name).
-						Msg("waiting for process to finish")
-					if !s.IsAlive() {
-						return nil
-					}
-				case <-timerTimeout.C:
-					log.Error().Msg("timeout reached")
-					return errTimeoutShuttingDownService
-				}
-			}
+			return s.IsAliveSentinel(false, 5*time.Second)
 		}
 	} else {
 		log.Debug().Str("service", s.definition.Name).Msg("does not need to be killed")

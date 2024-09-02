@@ -36,8 +36,8 @@ func (j *Joker) StopService(serviceName string, options serviceShutdownOptions) 
 	return nil
 }
 
-func (j *Joker) StartService(serviceName string, withDependencies bool) error {
-	queue, err := j.getServiceDependencyQueue(serviceName, withDependencies)
+func (j *Joker) StartService(serviceName string, options serviceStartOptions) error {
+	queue, err := j.getServiceDependencyQueue(serviceName, options.WithDependencies)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (j *Joker) StartService(serviceName string, withDependencies bool) error {
 	slices.Reverse(queue)
 
 	for _, service := range queue {
-		if err := service.Up(j.ctx, j); err != nil {
+		if err := service.Up(j.ctx, j, options); err != nil {
 			return err
 		}
 	}

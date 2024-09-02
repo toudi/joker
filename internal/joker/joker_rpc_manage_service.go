@@ -59,6 +59,7 @@ func rpcCmdStopServiceHandler(j *Joker, args string) error {
 
 type serviceStartOptions struct {
 	WithDependencies bool
+	Wait             bool // wait for service to be alive before progressing
 }
 
 func rpcCmdStartServiceHandler(j *Joker, args string) error {
@@ -70,6 +71,12 @@ func rpcCmdStartServiceHandler(j *Joker, args string) error {
 		false,
 		"process service dependencies",
 	)
+	parser.BoolVar(
+		&startOptions.Wait,
+		"wait",
+		false,
+		"wait for service(s) to be alive before progressing",
+	)
 
 	if err := parser.Parse(strings.Split(args, " ")); err != nil {
 		return err
@@ -77,5 +84,5 @@ func rpcCmdStartServiceHandler(j *Joker, args string) error {
 
 	serviceName := parser.Arg(0)
 
-	return j.StartService(serviceName, startOptions.WithDependencies)
+	return j.StartService(serviceName, startOptions)
 }

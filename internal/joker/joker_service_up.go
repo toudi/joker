@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"time"
 
 	"github.com/phuslu/log"
 )
@@ -34,7 +35,7 @@ func (s *Service) prepareDir(joker *Joker) error {
 	return nil
 }
 
-func (s *Service) Up(ctx context.Context, joker *Joker) error {
+func (s *Service) Up(ctx context.Context, joker *Joker, options serviceStartOptions) error {
 	log.Debug().Str("service", s.definition.Name).Msg("launching")
 
 	if err := s.bootstrap(ctx, joker); err != nil {
@@ -62,6 +63,12 @@ func (s *Service) Up(ctx context.Context, joker *Joker) error {
 	go func() {
 		_ = s.process.Wait()
 	}()
+
+	if options.Wait {
+		if err = s.IsAliveSentinel(true, 5*time.Second); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

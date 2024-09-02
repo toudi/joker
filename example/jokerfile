@@ -58,6 +58,10 @@ commands:
     - "stop -with-deps postgres"
     - rsync -a {{ env.data_dir }}/postgres/ {{ env.data_dir }}/postgres-backup
     - "start -with-deps postgres"
+    # if you need to wait for the service to become alive (for instance
+    # if you're doing migrations on the database) you might want to
+    # consider -wait option, like so:
+    # - start -wait -with-deps postgres
     # you can call other commands as well
     - call hello-world
   restore-db:

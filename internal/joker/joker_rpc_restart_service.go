@@ -12,5 +12,5 @@ func rpcCmdRestartServiceHandler(j *Joker, args string) error {
 		return err
 	}
 
-	return j.StartService(serviceName, shutdownOptions.withDependencies)
+	return j.StartService(serviceName, serviceStartOptions{Wait: shutdownOptions.wait})
 }

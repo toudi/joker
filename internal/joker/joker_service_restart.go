@@ -22,7 +22,10 @@ func (s *Service) Restart(joker *Joker, options serviceShutdownOptions) error {
 		return err
 	}
 
-	if err := s.Up(joker.ctx, joker); err != nil {
+	if err := s.Up(joker.ctx, joker, serviceStartOptions{
+		WithDependencies: options.withDependencies,
+		Wait:             options.wait,
+	}); err != nil {
 		return err
 	}
 

@@ -15,6 +15,7 @@ var run = Command{
 		if len(args) != 1 {
 			return errInvalidInvoke
 		}
+		jkr.StreamHandler()
 		return jkr.CallCommand(args[0])
 	},
 }
