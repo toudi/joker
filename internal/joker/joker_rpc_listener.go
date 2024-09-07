@@ -20,6 +20,7 @@ const rpcMaxLength = 1024
 func (j *Joker) startRPCListener() error {
 	socket, err := net.Listen("unix", rpcListenerFile)
 	if err != nil {
+		log.Error().Err(err).Msg("could not bind to unix socket file")
 		return err
 	}
 

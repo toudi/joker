@@ -2,12 +2,14 @@ package joker
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
 	"os/exec"
 	"strings"
 	"syscall"
 
 	"github.com/flosch/pongo2/v6"
+	"github.com/phuslu/log"
 	"github.com/samber/lo"
 )
 
@@ -64,6 +66,7 @@ func (j *Joker) prepareCommand(
 	if len(commands) > 1 {
 		// this is a series of commands therefore we have to execute it in shell
 		command := strings.Join(commands, " && ")
+		log.Trace().Str("command", command).Msg("")
 		cmd = exec.CommandContext(ctx, "/bin/sh", "-c", command)
 	} else if len(commands) == 1 {
 		// this is a single command therefore let's execute it directly
@@ -71,8 +74,10 @@ func (j *Joker) prepareCommand(
 		if len(commandParts) >= 1 {
 			commandName = commandParts[0]
 			if len(commandParts) > 1 {
-				commandArgs = strings.Split(commandParts[1], " ")
+				commandArgs = scanCommandArgs(commandParts[1])
+				// commandArgs = strings.Split(commandParts[1], " ")
 			}
+			log.Trace().Str("command", fmt.Sprintf("%v %v", commandName, commandArgs)).Msg("")
 			cmd = exec.CommandContext(ctx, commandName, commandArgs...)
 		}
 	}
@@ -85,4 +90,17 @@ func (j *Joker) prepareCommand(
 	// set the group so that we can send signals to subprocesses by ourselves
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	return cmd, nil
+}
+
+func scanCommandArgs(input string) []string {
+	// https://stackoverflow.com/a/47489825/1915230
+	r := csv.NewReader(strings.NewReader(input))
+	r.Comma = ' '
+	output, err := r.Read()
+	if err != nil {
+		log.Error().Err(err).Msg("")
+	}
+
+	log.Trace().Any("parsed arguments", output).Msg("")
+	return output
 }

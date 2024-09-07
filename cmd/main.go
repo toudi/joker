@@ -58,14 +58,12 @@ func main() {
 		log.DefaultLogger.Level = log.TraceLevel
 	}
 
-	jkr, err := joker.Joker_init(ctx, flags.jokerfile)
+	jkr, err := joker.Joker_init(ctx, joker.InitOptions{
+		Jokerfile: flags.jokerfile,
+		StateFile: flags.statefile,
+	})
 	if err != nil {
 		log.Error().Err(err).Msg("unable to initialize joker")
-		os.Exit(-1)
-	}
-
-	if err = jkr.SetStatefile(flags.statefile); err != nil {
-		log.Error().Err(err).Msg("unable to set statefile")
 		os.Exit(-1)
 	}
 

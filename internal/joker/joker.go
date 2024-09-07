@@ -3,6 +3,8 @@ package joker
 import (
 	"context"
 	"errors"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/flosch/pongo2/v6"
@@ -22,26 +24,47 @@ type Joker struct {
 	// that requests hot reloading
 	hotReloadWatcher *HotReloadWatcher
 	ctx              context.Context
+	initOptions      InitOptions
 }
 
-var errDataDirNotSpecified = errors.New("data_dir not set in jokerfile")
+var (
+	errDataDirNotSpecified  = errors.New("data_dir not set in jokerfile")
+	errUnableToSetStatefile = errors.New("unable to set statefile")
+)
 
-func Joker_init(ctx context.Context, configfile string) (*Joker, error) {
-	config, err := jokerfile.Parse(configfile)
+type InitOptions struct {
+	Workdir   string
+	Jokerfile string
+	StateFile string
+}
+
+func Joker_init(ctx context.Context, options InitOptions) (*Joker, error) {
+	config, err := jokerfile.Parse(options.Jokerfile)
 	if err != nil {
 		return nil, err
 	}
 
 	jkr := &Joker{
-		config:     config,
-		streamChan: make(chan StreamLine),
-		ctx:        ctx,
-		env:        make(pongo2.Context),
+		config:      config,
+		streamChan:  make(chan StreamLine),
+		ctx:         ctx,
+		env:         make(pongo2.Context),
+		initOptions: options,
+	}
+
+	if jkr.initOptions.Workdir, err = filepath.Abs(path.Dir(jkr.initOptions.Jokerfile)); err != nil {
+		return nil, err
 	}
 
 	if config.Environment != nil {
 		jkr.env.Update(pongo2.Context{"env": config.Environment})
+		interpolatedEnv := jkr.interpolateRecursively(
+			config.Environment,
+		)
+		jkr.env.Update(pongo2.Context{"env": interpolatedEnv})
 	}
+
+	jkr.interpolateRecursively(jkr.env)
 
 	var servicesEnv = map[string]interface{}{}
 
@@ -62,6 +85,9 @@ func Joker_init(ctx context.Context, configfile string) (*Joker, error) {
 	}
 
 	jkr.env.Update(pongo2.Context(map[string]interface{}{"services": servicesEnv}))
+	if err = jkr.SetStatefile(options.StateFile); err != nil {
+		return nil, errors.Join(errUnableToSetStatefile, err)
+	}
 
 	if err = jkr.startHotReloadWatcher(); err != nil {
 		return nil, err
@@ -107,4 +133,21 @@ func (j *Joker) interpolateEnvVars(value string, additionalEnv *pongo2.Context) 
 		log.Error().Err(err).Msg("error interpolating string")
 	}
 	return value
+}
+
+func (j *Joker) interpolateRecursively(env interface{}) interface{} {
+	if aMap, ok := env.(map[string]interface{}); ok {
+		for key, value := range aMap {
+			aMap[key] = j.interpolateRecursively(value)
+		}
+		return aMap
+	} else if aList, ok := env.([]interface{}); ok {
+		for idx, item := range aList {
+			aList[idx] = j.interpolateRecursively(item)
+		}
+		return aList
+	} else if value, ok := env.(string); ok {
+		return j.interpolateEnvVars(value, nil)
+	}
+	return env
 }

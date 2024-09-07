@@ -5,6 +5,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/phuslu/log"
 )
 
 var (
@@ -19,8 +21,9 @@ var (
 func (j *Joker) prepareHotReloading(service *Service) error {
 	if j.hotReloadWatcher == nil {
 		j.hotReloadWatcher = &HotReloadWatcher{
-			pathsByService:  make(map[*Service][]string),
+			configByService: make(map[*Service]HotReloadConfig),
 			detectedChanges: make(map[string]bool),
+			jokerWorkingDir: j.initOptions.Workdir,
 		}
 	}
 
@@ -32,11 +35,16 @@ func (j *Joker) startHotReloadWatcher() error {
 		// first, we have to traverse all the roots and calculate the final list of paths to
 		// be watched.
 
-		for _, srcDirs := range j.hotReloadWatcher.pathsByService {
-			for _, dir := range srcDirs {
+		for _, config := range j.hotReloadWatcher.configByService {
+			for _, pattern := range config.pathsWithPatterns {
+				dir := filepath.Dir(pattern)
 				if err := fs.WalkDir(os.DirFS(dir), ".", func(path string, d fs.DirEntry, err error) error {
 					if err != nil {
-						return err
+						if errors.Is(err, os.ErrNotExist) {
+							// the path does not exist which is not a fatal error, we can just no-op.
+							log.Trace().Str("path", filepath.Clean(filepath.Join(dir, path))).Msg("does not seem to exist; no-op")
+							return nil
+						}
 					}
 					if d.IsDir() {
 						if fullPath, err := filepath.Abs(filepath.Join(dir, path)); err != nil {

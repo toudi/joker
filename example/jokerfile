@@ -7,6 +7,8 @@ env:
     password: test
     dbname: example-db
     port: 2222
+  # you can self-reference the env-variables in order to generate interpolated strings like so:
+  foo: bar/{{ env.postgres.username }}
 services:
   dummy:
     command: echo {{ env.data_dir }}
@@ -20,6 +22,18 @@ services:
       - go build -o demo
       - ./demo
     cleanup: rm -f demo
+    # hot-reloading support:
+    #  hot-reload: true
+    #  watch all the files from the app-dir of service
+    #  hot-reload: "*.txt"
+    #  watch for all *.txt files in the app-dir
+    #  hot-reload:
+    #    - relative-path                # watch for changes in directory called `relative-path` which is relative to app-dir of service
+    #    - relative-path/*.txt          # watch for changes in all *.txt files in directory called `relative-path` which is relative to
+    #                                   # app-dir of service
+    #    - ./path-relative-to-jokerfile # ./ prefix indicates a path that is relative to jokerfile
+    #    - /some/absolute/path          # you can use absolute paths as well
+    #    - /some/absolute/path/*.ext    # and mask them with extensions of your choice.
     hot-reload: true
   redis:
     command: redis-server --port {{ env.redis_port }}

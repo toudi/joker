@@ -42,10 +42,12 @@ func rpcCmdCallHandler(j *Joker, command string) error {
 		if !ok {
 			// right now we can bail. moving forward, we could maybe support
 			// stuff like conditional execution
-			return errInvalidInstruction
+			if _, ok := instruction.(map[string]interface{}); !ok {
+				return errInvalidInstruction
+			}
+		} else {
+			log.Debug().Msgf("command: %s", instructionString)
 		}
-
-		log.Debug().Msgf("command: %s", instructionString)
 
 		var isRpc bool = false
 
@@ -61,10 +63,7 @@ func rpcCmdCallHandler(j *Joker, command string) error {
 		if !isRpc {
 			// it's not a known RPC therefore the only thing left is to
 			// try to interpret it as a command.
-
-			interpolated := j.interpolateEnvVars(instructionString, nil)
-			log.Trace().Msgf("command after interpolation: %s\n", interpolated)
-			process, err := j.prepareCommand(j.ctx, interpolated, nil)
+			process, err := j.prepareCommand(j.ctx, instruction, nil)
 			if err != nil {
 				return err
 			}
